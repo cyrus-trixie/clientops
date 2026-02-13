@@ -3,6 +3,18 @@ import { redirect } from 'next/navigation'
 import ProjectsTable from '@/components/projects/ProjectsTable'
 import AddProjectButton from '@/components/projects/AddProjectButton'
 
+// This interface tells TypeScript exactly what to expect from the Supabase join
+interface SupabaseProject {
+  id: any;
+  client_id: any;
+  title: any;
+  status: any;
+  price: any;
+  created_at: any;
+  updated_at: any;
+  clients: { name: string } | { name: string }[] | null;
+}
+
 export default async function ProjectsPage() {
   const supabase = await createClient()
 
@@ -35,13 +47,21 @@ export default async function ProjectsPage() {
     .select('id, name')
     .order('name')
 
-  // Transform projects to include clientName
-  const projectsWithClient = projects?.map(project => ({
-    ...project,
-    clientName: Array.isArray(project.clients) 
-      ? project.clients[0]?.name ?? 'Unknown'
-      : project.clients?.name ?? 'Unknown'
-  })) ?? []
+  // Transform projects to include clientName safely
+  const projectsWithClient = (projects as SupabaseProject[] | null)?.map(project => {
+    let clientName = 'Unknown';
+    
+    if (Array.isArray(project.clients)) {
+      clientName = project.clients[0]?.name ?? 'Unknown';
+    } else if (project.clients) {
+      clientName = project.clients.name;
+    }
+
+    return {
+      ...project,
+      clientName
+    };
+  }) ?? []
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">

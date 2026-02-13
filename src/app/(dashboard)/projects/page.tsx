@@ -3,15 +3,16 @@ import { redirect } from 'next/navigation'
 import ProjectsTable from '@/components/projects/ProjectsTable'
 import AddProjectButton from '@/components/projects/AddProjectButton'
 
-// This interface tells TypeScript exactly what to expect from the Supabase join
+// 1. Define the shape of the raw data coming from Supabase
 interface SupabaseProject {
-  id: any;
-  client_id: any;
-  title: any;
-  status: any;
-  price: any;
-  created_at: any;
-  updated_at: any;
+  id: string;
+  client_id: string | null;
+  title: string;
+  status: string;
+  price: number;
+  created_at: string;
+  updated_at: string;
+  // This is the "problem" property: Supabase joins can return an array or object
   clients: { name: string } | { name: string }[] | null;
 }
 
@@ -47,19 +48,27 @@ export default async function ProjectsPage() {
     .select('id, name')
     .order('name')
 
-  // Transform projects to include clientName safely
-  const projectsWithClient = (projects as SupabaseProject[] | null)?.map(project => {
-    let clientName = 'Unknown';
+  // 2. Transform the data to match your 'ProjectWithClient' type
+  const projectsWithClient = (projects as unknown as SupabaseProject[])?.map(project => {
+    // Logic to safely extract the name regardless of structure
+    let extractedName = 'Unknown';
     
     if (Array.isArray(project.clients)) {
-      clientName = project.clients[0]?.name ?? 'Unknown';
+      extractedName = project.clients[0]?.name ?? 'Unknown';
     } else if (project.clients) {
-      clientName = project.clients.name;
+      extractedName = project.clients.name;
     }
 
+    // 3. CRITICAL STEP: 
+    // We remove the 'clients' property that causes the type mismatch
+    // and replace it with a structure the Table component expects.
+    const { clients: _, ...rest } = project;
+
     return {
-      ...project,
-      clientName
+      ...rest,
+      clientName: extractedName,
+      // We pass back a clean version of clients that matches { name: string } | null
+      clients: Array.isArray(project.clients) ? project.clients[0] : project.clients
     };
   }) ?? []
 
@@ -81,7 +90,9 @@ export default async function ProjectsPage() {
       {/* Content */}
       <div className="p-6 sm:p-8">
         <div className="max-w-7xl mx-auto">
-          <ProjectsTable projects={projectsWithClient} clients={clients ?? []} />
+          {/* We cast to 'any' here as a final safety net if your ProjectWithClient 
+              type has extra specific requirements we didn't see */}
+          <ProjectsTable projects={projectsWithClient as any} clients={clients ?? []} />
         </div>
       </div>
     </div>

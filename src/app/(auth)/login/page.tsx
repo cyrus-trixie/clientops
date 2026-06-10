@@ -41,7 +41,7 @@ export default function LoginPage() {
             C
           </div>
           <span className="text-xl font-semibold text-slate-900">
-            ClientOps
+            School-Admin
           </span>
         </div>
 

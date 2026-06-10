@@ -52,13 +52,13 @@ export default function SignupPage() {
         <div className="w-8 h-8 bg-slate-900 rounded-md flex items-center justify-center text-white text-lg font-bold">
           C
         </div>
-        <span className="text-xl font-semibold text-slate-900">ClientOps</span>
+        <span className="text-xl font-semibold text-slate-900">School-Management-System</span>
       </div>
 
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-slate-900 mb-2">Create an account</h1>
-        <p className="text-sm text-slate-500">Get started with ClientOps today</p>
+        <p className="text-sm text-slate-500">Get started with School-Management-System today</p>
       </div>
 
       {/* Error/Success Message */}
